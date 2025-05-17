@@ -14,6 +14,9 @@ public class PlayerTank : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.5f;
+    [SerializeField] private GameObject muzzleFlashPrefab; // Префаб вспышки выстрела
+    [SerializeField] private AudioClip shootSound; // Звук выстрела
+    [SerializeField] private float shootVolume = 0.5f; // Громкость звука выстрела
 
     // Публичные свойства для UI
     public float MoveSpeed => moveSpeed;
@@ -225,8 +228,19 @@ public class PlayerTank : MonoBehaviour
     {
         if (fireAction != null && fireAction.triggered)
         {
-            Fire();
+            // Проверяем, нет ли стен перед танком
+            if (!CheckWallInFront())
+            {
+                Fire();
+            }
         }
+    }
+
+    private bool CheckWallInFront()
+    {
+        // Проверяем центральную точку перед танком
+        Vector2 checkPoint = frontCenter;
+        return CheckCollisionAtPoint(checkPoint);
     }
 
     private void FixedUpdate()
@@ -560,10 +574,46 @@ public class PlayerTank : MonoBehaviour
         {
             if (bulletPrefab != null && firePoint != null)
             {
-                Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+                // Создаем пулю
+                GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+                
+                // Инициализируем пулю с правильным направлением
+                Vector2 shootDirection = GetShootDirection();
+                Debug.Log($"Firing bullet: direction={shootDirection}, position={firePoint.position}, rotation={firePoint.rotation.eulerAngles}");
+                bullet.GetComponent<Bullet>().Initialize(shootDirection);
+                
+                // Создаем вспышку выстрела
+                if (muzzleFlashPrefab != null)
+                {
+                    GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, firePoint.position, firePoint.rotation);
+                    Destroy(muzzleFlash, 0.1f); // Уничтожаем вспышку через 0.1 секунды
+                }
+                
+                // Проигрываем звук выстрела
+                if (shootSound != null)
+                {
+                    AudioSource.PlayClipAtPoint(shootSound, firePoint.position, shootVolume);
+                }
+                
                 nextFireTime = Time.time + fireRate;
+                
+                // Логируем выстрел
+                string log = $"shoot dir={currentDirection} pos=({firePoint.position.x.ToString("F3", CultureInfo.InvariantCulture)},{firePoint.position.y.ToString("F3", CultureInfo.InvariantCulture)})";
+                AddLog(stateLogs, log);
             }
         }
+    }
+
+    private Vector2 GetShootDirection()
+    {
+        return currentDirection switch
+        {
+            0 => Vector2.up,    // Вверх
+            1 => Vector2.right, // Вправо
+            2 => Vector2.down,  // Вниз
+            3 => Vector2.left,  // Влево
+            _ => Vector2.up
+        };
     }
 
     private void UpdateCollisionPoints()

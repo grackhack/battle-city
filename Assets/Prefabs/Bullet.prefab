@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7587546253062782288}
   - component: {fileID: 2131603626766554226}
   - component: {fileID: -319898235281660310}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bullet
   m_TagString: PlayerBullet
   m_Icon: {fileID: 0}
@@ -98,13 +98,13 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6139230073805978724}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0
   m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -129,10 +129,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af4557267e28ff42b82add6b88a90c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 8
+  speed: 32
   baseDamage: 1
   hitEffectPrefab: {fileID: 0}
   lifetime: 3
+  hitSound: {fileID: 0}
+  hitVolume: 0.3
 --- !u!61 &-319898235281660310
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -177,5 +179,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.1, y: 0.1}
+  m_Size: {x: 0.25, y: 0.25}
   m_EdgeRadius: 0

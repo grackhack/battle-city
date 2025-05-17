@@ -2,14 +2,19 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] private float speed = 10f;
+    [SerializeField] private float speed = 16f; // Скорость в пикселях в секунду
     [SerializeField] private int baseDamage = 1; // Базовый урон
     [SerializeField] private GameObject hitEffectPrefab; // Префаб эффекта попадания
     [SerializeField] private float lifetime = 3f; // Время жизни пули
+    [SerializeField] private AudioClip hitSound; // Звук попадания
+    [SerializeField] private float hitVolume = 0.3f; // Громкость звука попадания
     
     private Rigidbody2D rb;
     private BoxCollider2D bulletCollider;
     private Vector2 direction; // Направление движения пули
+    private const float PIXELS_PER_UNIT = 16f; // 16 пикселей = 1 юнит Unity
+    private const float BULLET_SIZE_PIXELS = 4f; // Размер пули в пикселях
+    private const float PIXEL_SIZE = 1f / PIXELS_PER_UNIT; // Размер одного пикселя в юнитах
 
     // Публичное свойство для урона
     public int Damage { get; private set; }
@@ -46,7 +51,7 @@ public class Bullet : MonoBehaviour
             bulletCollider = gameObject.AddComponent<BoxCollider2D>();
         }
         bulletCollider.isTrigger = false;
-        bulletCollider.size = new Vector2(0.1f, 0.1f);
+        bulletCollider.size = new Vector2(BULLET_SIZE_PIXELS/PIXELS_PER_UNIT, BULLET_SIZE_PIXELS/PIXELS_PER_UNIT);
 
         // Игнорируем столкновения с танком игрока
         Physics2D.IgnoreCollision(bulletCollider, GameObject.FindGameObjectWithTag("Player").GetComponent<BoxCollider2D>());
@@ -56,7 +61,8 @@ public class Bullet : MonoBehaviour
     {
         if (rb != null)
         {
-            rb.linearVelocity = direction * speed;
+            // Устанавливаем скорость в пикселях в секунду
+            rb.velocity = direction * speed * PIXEL_SIZE;
         }
         else
         {
@@ -69,6 +75,12 @@ public class Bullet : MonoBehaviour
 
     private void Update()
     {
+        // Выравниваем позицию по пиксельной сетке
+        Vector2 pos = transform.position;
+        pos.x = Mathf.Round(pos.x * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;
+        pos.y = Mathf.Round(pos.y * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;
+        transform.position = pos;
+
         // Визуализация траектории
         Debug.DrawRay(transform.position, direction * 0.5f, Color.red, 0.1f);
     }
@@ -97,7 +109,7 @@ public class Bullet : MonoBehaviour
         IDamageable damageable = collision.gameObject.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeDamage(Damage); // Используем свойство Damage вместо поля damage
+            damageable.TakeDamage(Damage);
         }
 
         // Создаем эффект попадания
@@ -105,6 +117,14 @@ public class Bullet : MonoBehaviour
         {
             Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
         }
+
+        // Проигрываем звук попадания
+        if (hitSound != null)
+        {
+            AudioSource.PlayClipAtPoint(hitSound, transform.position, hitVolume);
+        }
+        
+        Debug.Log($"Bullet collision with: {collision.gameObject.name} on layer {collision.gameObject.layer}");
         
         Destroy(gameObject);
     }
